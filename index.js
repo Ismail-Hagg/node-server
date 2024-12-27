@@ -24,11 +24,43 @@ app.get("/data-scrapper", async (req, res) => {
   }
 });
 
+app.get("/script", async (req, res) => {
+  const { id } = req.query;
+  try {
+    const data = await getScipt(id);
+    const flip = JSON.parse(data);
+    const last = flip["props"]["pageProps"]["contentData"]["categories"];
+
+    return res.status(200).json(last);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      err: err.toString(),
+    });
+  }
+});
+
 app.listen(5000, () => {
   console.log("====================================");
   console.log("server listening on port 5000");
   console.log("====================================");
 });
+
+async function getScipt(id) {
+  let thing;
+  const url = `https://www.imdb.com/name/${id}/awards/`;
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+  };
+
+  await axios(url, { headers }).then((res) => {
+    const html_data = res.data;
+    const $ = cheerio.load(html_data);
+    thing = $("script#__NEXT_DATA__").text();
+  });
+  return thing;
+}
 async function cryptopriceScraper(id) {
   const url = `https://www.imdb.com/name/${id}/awards/`;
   let result = [];
